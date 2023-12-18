@@ -411,7 +411,7 @@ export function getAuthUrl(application, provider, method) {
     || provider.type === "Xero" || provider.type === "Yahoo" || provider.type === "Yammer" || provider.type === "Yandex" || provider.type === "Zoom") {
     return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
   } else if (provider.type === "AzureADB2C") {
-    return `https://${provider.domain}.b2clogin.com/${provider.domain}.onmicrosoft.com/${provider.appId}/oauth2/v2.0/authorize?client_id=${provider.clientId}&nonce=defaultNonce&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=id_token&prompt=login`;
+    return `https://${provider.domain}.b2clogin.com/${provider.domain}.onmicrosoft.com/${provider.appId}/oauth2/v2.0/authorize?client_id=${provider.clientId}&nonce=defaultNonce&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${state}&prompt=login`;
   } else if (provider.type === "DingTalk") {
     return `${endpoint}?client_id=${provider.clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&prompt=consent&state=${state}`;
   } else if (provider.type === "WeChat") {
