@@ -12,7 +12,7 @@ COPY go.mod go.sum .
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOPROXY=${GOPROXY} go mod download
 COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s" -o server .
-RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go > version_info.txt
+#RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go > version_info.txt
 
 FROM alpine:latest AS STANDARD
 LABEL MAINTAINER="https://casdoor.org/"
