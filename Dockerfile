@@ -1,10 +1,11 @@
-FROM --platform=$BUILDPLATFORM node:16.18.0 AS FRONT
+<<<<<<< HEAD
+FROM --platform=$BUILDPLATFORM node:18.19.0 AS FRONT
 WORKDIR /web
 COPY ./web .
 RUN yarn install --frozen-lockfile --network-timeout 1000000 && yarn run build
 
 
-FROM --platform=$BUILDPLATFORM golang:1.19.9 AS BACK
+FROM --platform=$BUILDPLATFORM golang:1.20.12 AS BACK
 ENV CGO_ENABLED=0
 ARG TARGETOS TARGETARCH GOPROXY
 WORKDIR /go/src/casdoor
