@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 FROM --platform=$BUILDPLATFORM node:18.19.0 AS FRONT
 WORKDIR /web
 COPY ./web .
