@@ -24,6 +24,12 @@ import (
 	"github.com/xorm-io/core"
 )
 
+type SigninMethod struct {
+	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
+	DisplayName string `xorm:"varchar(100)" json:"displayName"`
+	Rule        string `json:"rule"`
+}
+
 type SignupItem struct {
 	Name        string `json:"name"`
 	Visible     bool   `json:"visible"`
@@ -63,6 +69,7 @@ type Application struct {
 	OrgChoiceMode       string          `json:"orgChoiceMode"`
 	SamlReplyUrl        string          `xorm:"varchar(100)" json:"samlReplyUrl"`
 	Providers           []*ProviderItem `xorm:"mediumtext" json:"providers"`
+	SigninMethods       []*SigninMethod `xorm:"varchar(2000)" json:"signinMethods"`
 	SignupItems         []*SignupItem   `xorm:"varchar(2000)" json:"signupItems"`
 	GrantTypes          []string        `xorm:"varchar(1000)" json:"grantTypes"`
 	OrganizationObj     *Organization   `xorm:"-" json:"organizationObj"`
@@ -75,6 +82,7 @@ type Application struct {
 	ClientSecret         string     `xorm:"varchar(100)" json:"clientSecret"`
 	RedirectUris         []string   `xorm:"varchar(1000)" json:"redirectUris"`
 	TokenFormat          string     `xorm:"varchar(100)" json:"tokenFormat"`
+	TokenFields          []string   `xorm:"varchar(1000)" json:"tokenFields"`
 	ExpireInHours        int        `json:"expireInHours"`
 	RefreshExpireInHours int        `json:"refreshExpireInHours"`
 	SignupUrl            string     `xorm:"varchar(200)" json:"signupUrl"`
@@ -92,7 +100,7 @@ type Application struct {
 	FormBackgroundUrl    string     `xorm:"varchar(200)" json:"formBackgroundUrl"`
 
 	FailedSigninLimit      int `json:"failedSigninLimit"`
-	FailedSigninfrozenTime int `json:"failedSigninfrozenTime"`
+	FailedSigninFrozenTime int `json:"failedSigninFrozenTime"`
 }
 
 func GetApplicationCount(owner, field, value string) (int64, error) {
@@ -191,6 +199,30 @@ func extendApplicationWithOrg(application *Application) (err error) {
 	return
 }
 
+func extendApplicationWithSigninMethods(application *Application) (err error) {
+	if len(application.SigninMethods) == 0 {
+		if application.EnablePassword {
+			signinMethod := &SigninMethod{Name: "Password", DisplayName: "Password", Rule: "All"}
+			application.SigninMethods = append(application.SigninMethods, signinMethod)
+		}
+		if application.EnableCodeSignin {
+			signinMethod := &SigninMethod{Name: "Verification code", DisplayName: "Verification code", Rule: "All"}
+			application.SigninMethods = append(application.SigninMethods, signinMethod)
+		}
+		if application.EnableWebAuthn {
+			signinMethod := &SigninMethod{Name: "WebAuthn", DisplayName: "WebAuthn", Rule: "None"}
+			application.SigninMethods = append(application.SigninMethods, signinMethod)
+		}
+	}
+
+	if len(application.SigninMethods) == 0 {
+		signinMethod := &SigninMethod{Name: "Password", DisplayName: "Password", Rule: "All"}
+		application.SigninMethods = append(application.SigninMethods, signinMethod)
+	}
+
+	return
+}
+
 func getApplication(owner string, name string) (*Application, error) {
 	if owner == "" || name == "" {
 		return nil, nil
@@ -209,6 +241,11 @@ func getApplication(owner string, name string) (*Application, error) {
 		}
 
 		err = extendApplicationWithOrg(&application)
+		if err != nil {
+			return nil, err
+		}
+
+		err = extendApplicationWithSigninMethods(&application)
 		if err != nil {
 			return nil, err
 		}
@@ -233,6 +270,11 @@ func GetApplicationByOrganizationName(organization string) (*Application, error)
 		}
 
 		err = extendApplicationWithOrg(&application)
+		if err != nil {
+			return nil, err
+		}
+
+		err = extendApplicationWithSigninMethods(&application)
 		if err != nil {
 			return nil, err
 		}
@@ -280,6 +322,11 @@ func GetApplicationByClientId(clientId string) (*Application, error) {
 		}
 
 		err = extendApplicationWithOrg(&application)
+		if err != nil {
+			return nil, err
+		}
+
+		err = extendApplicationWithSigninMethods(&application)
 		if err != nil {
 			return nil, err
 		}
@@ -335,6 +382,13 @@ func GetMaskedApplication(application *Application, userId string) *Application 
 
 	if application.InvitationCodes != nil {
 		application.InvitationCodes = []string{"***"}
+	}
+
+	if application.FailedSigninLimit == 0 {
+		application.FailedSigninLimit = DefaultFailedSigninLimit
+	}
+	if application.FailedSigninFrozenTime == 0 {
+		application.FailedSigninFrozenTime = DefaultFailedSigninFrozenTime
 	}
 
 	return application
@@ -485,6 +539,69 @@ func (application *Application) IsRedirectUriValid(redirectUri string) bool {
 	return false
 }
 
+func (application *Application) IsPasswordEnabled() bool {
+	if len(application.SigninMethods) == 0 {
+		return application.EnablePassword
+	} else {
+		for _, signinMethod := range application.SigninMethods {
+			if signinMethod.Name == "Password" {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func (application *Application) IsPasswordWithLdapEnabled() bool {
+	if len(application.SigninMethods) == 0 {
+		return application.EnablePassword
+	} else {
+		for _, signinMethod := range application.SigninMethods {
+			if signinMethod.Name == "Password" && signinMethod.Rule == "All" {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func (application *Application) IsCodeSigninViaEmailEnabled() bool {
+	if len(application.SigninMethods) == 0 {
+		return application.EnableCodeSignin
+	} else {
+		for _, signinMethod := range application.SigninMethods {
+			if signinMethod.Name == "Verification code" && signinMethod.Rule != "Phone only" {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func (application *Application) IsCodeSigninViaSmsEnabled() bool {
+	if len(application.SigninMethods) == 0 {
+		return application.EnableCodeSignin
+	} else {
+		for _, signinMethod := range application.SigninMethods {
+			if signinMethod.Name == "Verification code" && signinMethod.Rule != "Email only" {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func (application *Application) IsLdapEnabled() bool {
+	if len(application.SigninMethods) > 0 {
+		for _, signinMethod := range application.SigninMethods {
+			if signinMethod.Name == "LDAP" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func IsOriginAllowed(origin string) (bool, error) {
 	applications, err := GetApplications("")
 	if err != nil {
@@ -579,7 +696,7 @@ func applicationChangeTrigger(oldName string, newName string) error {
 			}
 		}
 		permissions[i].Resources = permissionResoureces
-		_, err = session.Where("name=?", permissions[i].Name).Update(permissions[i])
+		_, err = session.Where("owner=?", permissions[i].Owner).Where("name=?", permissions[i].Name).Update(permissions[i])
 		if err != nil {
 			return err
 		}

@@ -45,6 +45,23 @@
           "alertType": "None"
         }
       ],
+      "signinMethods": [
+        {
+          "name": "Password",
+          "displayName": "Password",
+          "rule": "All",
+        },
+        {
+          "name": "Verification code",
+          "displayName": "Verification code",
+          "rule": "All",
+        },
+        {
+          "name": "WebAuthn",
+          "displayName": "WebAuthn",
+          "rule": "None",
+        },
+      ],
       "signupItems": [
         {
           "name": "ID",
@@ -106,7 +123,7 @@
       "redirectUris": [""],
       "expireInHours": 168,
       "failedSigninLimit": 5,
-      "failedSigninfrozenTime": 15
+      "failedSigninFrozenTime": 15
     }
   ],
   "users": [

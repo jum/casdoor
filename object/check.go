@@ -28,9 +28,8 @@ import (
 )
 
 const (
-	DefaultFailedSigninLimit = 5
-	// DefaultFailedSigninfrozenTime The unit of frozen time is minutes
-	DefaultFailedSigninfrozenTime = 15
+	DefaultFailedSigninLimit      = 5
+	DefaultFailedSigninFrozenTime = 15
 )
 
 func CheckUserSignup(application *Application, organization *Organization, form *form.AuthForm, lang string) string {
@@ -144,7 +143,7 @@ func CheckUserSignup(application *Application, organization *Organization, form 
 }
 
 func checkSigninErrorTimes(user *User, lang string) error {
-	failedSigninLimit, failedSigninfrozenTime, err := GetFailedSigninConfigByUser(user)
+	failedSigninLimit, failedSigninFrozenTime, err := GetFailedSigninConfigByUser(user)
 	if err != nil {
 		return err
 	}
@@ -152,7 +151,7 @@ func checkSigninErrorTimes(user *User, lang string) error {
 	if user.SigninWrongTimes >= failedSigninLimit {
 		lastSignWrongTime, _ := time.Parse(time.RFC3339, user.LastSigninWrongTime)
 		passedTime := time.Now().UTC().Sub(lastSignWrongTime)
-		minutes := failedSigninfrozenTime - int(passedTime.Minutes())
+		minutes := failedSigninFrozenTime - int(passedTime.Minutes())
 
 		// deny the login if the error times is greater than the limit and the last login time is less than the duration
 		if minutes > 0 {
@@ -278,8 +277,12 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 
 func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
 	enableCaptcha := false
+	isSigninViaLdap := false
+	isPasswordWithLdapEnabled := false
 	if len(options) > 0 {
 		enableCaptcha = options[0]
+		isSigninViaLdap = options[1]
+		isPasswordWithLdapEnabled = options[2]
 	}
 	user, err := GetUserByFields(organization, username)
 	if err != nil {
@@ -294,14 +297,33 @@ func CheckUserPassword(organization string, username string, password string, la
 		return nil, fmt.Errorf(i18n.Translate(lang, "check:The user is forbidden to sign in, please contact the administrator"))
 	}
 
+	if isSigninViaLdap {
+		if user.Ldap == "" {
+			return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
+		}
+	}
+
 	if user.Ldap != "" {
+		if !isSigninViaLdap && !isPasswordWithLdapEnabled {
+			return nil, fmt.Errorf(i18n.Translate(lang, "check:password or code is incorrect"))
+		}
+
+		// check the login error times
+		if !enableCaptcha {
+			err = checkSigninErrorTimes(user, lang)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// only for LDAP users
 		err = checkLdapUserPassword(user, password, lang)
 		if err != nil {
 			if err.Error() == "user not exist" {
 				return nil, fmt.Errorf(i18n.Translate(lang, "check:The user: %s doesn't exist in LDAP server"), username)
 			}
-			return nil, err
+
+			return nil, recordSigninErrorInfo(user, lang, enableCaptcha)
 		}
 	} else {
 		err = CheckPassword(user, password, lang, enableCaptcha)
@@ -486,12 +508,11 @@ func CheckToEnableCaptcha(application *Application, organization, username strin
 					return false, err
 				}
 
-				var failedSigninLimit int
-				if application.FailedSigninLimit == 0 {
-					failedSigninLimit = 5
-				} else {
-					failedSigninLimit = application.FailedSigninLimit
+				failedSigninLimit := application.FailedSigninLimit
+				if failedSigninLimit == 0 {
+					failedSigninLimit = DefaultFailedSigninLimit
 				}
+
 				return user != nil && user.SigninWrongTimes >= failedSigninLimit, nil
 			}
 			return providerItem.Rule == "Always", nil

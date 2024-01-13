@@ -222,7 +222,7 @@ func (c *ApiController) HandleLoggedIn(application *object.Application, user *ob
 // @Param   redirectUri    query    string  true        "redirect uri"
 // @Param   scope    query    string  true        "scope"
 // @Param   state    query    string  true        "state"
-// @Success 200 {object}  Response The Response object
+// @Success 200 {object} controllers.Response The Response object
 // @router /get-app-login [get]
 func (c *ApiController) GetApplicationLogin() {
 	clientId := c.Input().Get("clientId")
@@ -342,7 +342,28 @@ func (c *ApiController) Login() {
 				return
 			}
 
+			var application *object.Application
+			application, err = object.GetApplication(fmt.Sprintf("admin/%s", authForm.Application))
+			if err != nil {
+				c.ResponseError(err.Error(), nil)
+				return
+			}
+
+			if application == nil {
+				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
+				return
+			}
+
 			verificationCodeType := object.GetVerifyType(authForm.Username)
+			if verificationCodeType == object.VerifyTypeEmail && !application.IsCodeSigninViaEmailEnabled() {
+				c.ResponseError(c.T("auth:The login method: login with email is not enabled for the application"))
+				return
+			}
+			if verificationCodeType == object.VerifyTypePhone && !application.IsCodeSigninViaSmsEnabled() {
+				c.ResponseError(c.T("auth:The login method: login with SMS is not enabled for the application"))
+				return
+			}
+
 			var checkDest string
 			if verificationCodeType == object.VerifyTypePhone {
 				authForm.CountryCode = user.GetCountryCode(authForm.CountryCode)
@@ -378,8 +399,12 @@ func (c *ApiController) Login() {
 				c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
 				return
 			}
-			if !application.EnablePassword {
+			if authForm.SigninMethod == "Password" && !application.IsPasswordEnabled() {
 				c.ResponseError(c.T("auth:The login method: login with password is not enabled for the application"))
+				return
+			}
+			if authForm.SigninMethod == "LDAP" && !application.IsLdapEnabled() {
+				c.ResponseError(c.T("auth:The login method: login with LDAP is not enabled for the application"))
 				return
 			}
 			var enableCaptcha bool
@@ -411,7 +436,14 @@ func (c *ApiController) Login() {
 			}
 
 			password := authForm.Password
-			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha)
+			isSigninViaLdap := authForm.SigninMethod == "LDAP"
+			var isPasswordWithLdapEnabled bool
+			if authForm.SigninMethod == "Password" {
+				isPasswordWithLdapEnabled = application.IsPasswordWithLdapEnabled()
+			} else {
+				isPasswordWithLdapEnabled = false
+			}
+			user, err = object.CheckUserPassword(authForm.Organization, authForm.Username, password, c.GetAcceptLanguage(), enableCaptcha, isSigninViaLdap, isPasswordWithLdapEnabled)
 		}
 
 		if err != nil {

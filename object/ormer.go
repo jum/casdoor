@@ -36,20 +36,24 @@ import (
 )
 
 var (
-	ormer                   *Ormer = nil
-	isCreateDatabaseDefined        = false
-	createDatabase                 = true
+	ormer          *Ormer = nil
+	createDatabase        = true
+	configPath            = "conf/app.conf"
 )
 
 func InitFlag() {
-	if !isCreateDatabaseDefined {
-		isCreateDatabaseDefined = true
-		createDatabase = getCreateDatabaseFlag()
-	}
+	createDatabase = getCreateDatabaseFlag()
+	configPath = getConfigFlag()
 }
 
 func getCreateDatabaseFlag() bool {
 	res := flag.Bool("createDatabase", false, "true if you need to create database")
+	flag.Parse()
+	return *res
+}
+
+func getConfigFlag() string {
+	res := flag.String("config", "conf/app.conf", "set it to \"/your/path/app.conf\" if your config file is not in: \"/conf/app.conf\"")
 	flag.Parse()
 	return *res
 }
@@ -68,7 +72,7 @@ func InitConfig() {
 
 func InitAdapter() {
 	if conf.GetConfigString("driverName") == "" {
-		if !util.FileExist("conf/app.conf") {
+		if !util.FileExist(configPath) {
 			dir, err := os.Getwd()
 			if err != nil {
 				panic(err)
@@ -234,12 +238,37 @@ func (a *Ormer) createTable() {
 		panic(err)
 	}
 
+	err = a.Engine.Sync2(new(Group))
+	if err != nil {
+		panic(err)
+	}
+
 	err = a.Engine.Sync2(new(User))
 	if err != nil {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Group))
+	err = a.Engine.Sync2(new(Invitation))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Application))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Provider))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Resource))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Cert))
 	if err != nil {
 		panic(err)
 	}
@@ -269,42 +298,12 @@ func (a *Ormer) createTable() {
 		panic(err)
 	}
 
-	err = a.Engine.Sync2(new(Provider))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Application))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Resource))
+	err = a.Engine.Sync2(new(Session))
 	if err != nil {
 		panic(err)
 	}
 
 	err = a.Engine.Sync2(new(Token))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(VerificationRecord))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Webhook))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Syncer))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Cert))
 	if err != nil {
 		panic(err)
 	}
@@ -315,6 +314,36 @@ func (a *Ormer) createTable() {
 	}
 
 	err = a.Engine.Sync2(new(Payment))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Plan))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Pricing))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Subscription))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Syncer))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(Webhook))
+	if err != nil {
+		panic(err)
+	}
+
+	err = a.Engine.Sync2(new(VerificationRecord))
 	if err != nil {
 		panic(err)
 	}
@@ -330,26 +359,6 @@ func (a *Ormer) createTable() {
 	}
 
 	err = a.Engine.Sync2(new(xormadapter.CasbinRule))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Session))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Subscription))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Plan))
-	if err != nil {
-		panic(err)
-	}
-
-	err = a.Engine.Sync2(new(Pricing))
 	if err != nil {
 		panic(err)
 	}

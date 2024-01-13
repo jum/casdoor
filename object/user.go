@@ -867,7 +867,8 @@ func GetUserInfo(user *User, scope string, aud string, host string) *Userinfo {
 	}
 	if strings.Contains(scope, "email") {
 		resp.Email = user.Email
-		resp.EmailVerified = user.EmailVerified
+		// resp.EmailVerified = user.EmailVerified
+		resp.EmailVerified = true
 	}
 	if strings.Contains(scope, "address") {
 		resp.Address = user.Location
@@ -884,6 +885,18 @@ func LinkUserAccount(user *User, field string, value string) (bool, error) {
 
 func (user *User) GetId() string {
 	return fmt.Sprintf("%s/%s", user.Owner, user.Name)
+}
+
+func (user *User) GetFriendlyName() string {
+	if user.FirstName != "" && user.LastName != "" {
+		return fmt.Sprintf("%s, %s", user.FirstName, user.LastName)
+	} else if user.DisplayName != "" {
+		return user.DisplayName
+	} else if user.Name != "" {
+		return user.Name
+	} else {
+		return user.Id
+	}
 }
 
 func isUserIdGlobalAdmin(userId string) bool {
