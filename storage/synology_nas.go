@@ -12,24 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controllers
+package storage
 
-import "github.com/casdoor/casdoor/object"
+import (
+	"github.com/casdoor/oss"
+	"github.com/casdoor/oss/synology"
+)
 
-// GetDashboard
-// @Title GetDashboard
-// @Tag System API
-// @Description get information of dashboard
-// @Success 200 {object} controllers.Response The Response object
-// @router /get-dashboard [get]
-func (c *ApiController) GetDashboard() {
-	owner := c.Input().Get("owner")
+func NewSynologyNasStorageProvider(clientId string, clientSecret string, endpoint string) oss.StorageInterface {
+	sp := synology.New(&synology.Config{
+		AccessID:     clientId,
+		AccessKey:    clientSecret,
+		Endpoint:     endpoint,
+		SharedFolder: "/home",
+	})
 
-	data, err := object.GetDashboard(owner)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
-	}
-
-	c.ResponseOk(data)
+	return sp
 }

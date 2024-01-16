@@ -916,9 +916,9 @@ func (c *ApiController) HandleSamlLogin() {
 }
 
 // HandleOfficialAccountEvent ...
-// @Tag HandleOfficialAccountEvent API
+// @Tag System API
 // @Title HandleOfficialAccountEvent
-// @router /api/webhook [POST]
+// @router /webhook [POST]
 // @Success 200 {object} object.Userinfo The Response object
 func (c *ApiController) HandleOfficialAccountEvent() {
 	respBytes, err := ioutil.ReadAll(c.Ctx.Request.Body)
@@ -947,9 +947,9 @@ func (c *ApiController) HandleOfficialAccountEvent() {
 }
 
 // GetWebhookEventType ...
-// @Tag GetWebhookEventType API
+// @Tag System API
 // @Title GetWebhookEventType
-// @router /api/get-webhook-event [GET]
+// @router /get-webhook-event [GET]
 // @Success 200 {object} object.Userinfo The Response object
 func (c *ApiController) GetWebhookEventType() {
 	lock.Lock()
@@ -970,26 +970,30 @@ func (c *ApiController) GetWebhookEventType() {
 // @Description Get Login Error Counts
 // @Param   id     query    string  true        "The id ( owner/name ) of user"
 // @Success 200 {object} controllers.Response The Response object
-// @router /api/get-captcha-status [get]
+// @router /get-captcha-status [get]
 func (c *ApiController) GetCaptchaStatus() {
 	organization := c.Input().Get("organization")
-	userId := c.Input().Get("user_id")
+	userId := c.Input().Get("userId")
 	user, err := object.GetUserByFields(organization, userId)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
 
-	failedSigninLimit, _, err := object.GetFailedSigninConfigByUser(user)
-	if err != nil {
-		c.ResponseError(err.Error())
-		return
+	captchaEnabled := false
+	if user != nil {
+		var failedSigninLimit int
+		failedSigninLimit, _, err = object.GetFailedSigninConfigByUser(user)
+		if err != nil {
+			c.ResponseError(err.Error())
+			return
+		}
+
+		if user.SigninWrongTimes >= failedSigninLimit {
+			captchaEnabled = true
+		}
 	}
 
-	var captchaEnabled bool
-	if user != nil && user.SigninWrongTimes >= failedSigninLimit {
-		captchaEnabled = true
-	}
 	c.ResponseOk(captchaEnabled)
 }
 
@@ -997,7 +1001,7 @@ func (c *ApiController) GetCaptchaStatus() {
 // @Title Callback
 // @Tag Callback API
 // @Description Get Login Error Counts
-// @router /api/Callback [post]
+// @router /Callback [post]
 // @Success 200 {object} object.Userinfo The Response object
 func (c *ApiController) Callback() {
 	code := c.GetString("code")

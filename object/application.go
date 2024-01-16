@@ -37,12 +37,13 @@ type SignupItem struct {
 	Prompted    bool   `json:"prompted"`
 	Label       string `json:"label"`
 	Placeholder string `json:"placeholder"`
+	Regex       string `json:"regex"`
 	Rule        string `json:"rule"`
 }
 
 type SamlItem struct {
 	Name       string `json:"name"`
-	NameFormat string `json:"nameformat"`
+	NameFormat string `json:"nameFormat"`
 	Value      string `json:"value"`
 }
 
@@ -347,6 +348,17 @@ func GetMaskedApplication(application *Application, userId string) *Application 
 		return nil
 	}
 
+	if application.TokenFields == nil {
+		application.TokenFields = []string{}
+	}
+
+	if application.FailedSigninLimit == 0 {
+		application.FailedSigninLimit = DefaultFailedSigninLimit
+	}
+	if application.FailedSigninFrozenTime == 0 {
+		application.FailedSigninFrozenTime = DefaultFailedSigninFrozenTime
+	}
+
 	if userId != "" {
 		if isUserIdGlobalAdmin(userId) {
 			return application
@@ -382,13 +394,6 @@ func GetMaskedApplication(application *Application, userId string) *Application 
 
 	if application.InvitationCodes != nil {
 		application.InvitationCodes = []string{"***"}
-	}
-
-	if application.FailedSigninLimit == 0 {
-		application.FailedSigninLimit = DefaultFailedSigninLimit
-	}
-	if application.FailedSigninFrozenTime == 0 {
-		application.FailedSigninFrozenTime = DefaultFailedSigninFrozenTime
 	}
 
 	return application

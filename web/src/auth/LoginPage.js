@@ -201,7 +201,7 @@ class LoginPage extends React.Component {
   }
 
   getDefaultLoginMethod(application) {
-    if (application?.signinMethods.length > 0) {
+    if (application?.signinMethods?.length > 0) {
       switch (application?.signinMethods[0].name) {
       case "Password": return "password";
       case "Verification code": {
@@ -588,6 +588,10 @@ class LoginPage extends React.Component {
                   },
                   {
                     validator: (_, value) => {
+                      if (value === "") {
+                        return Promise.resolve();
+                      }
+
                       if (this.state.loginMethod === "verificationCode") {
                         if (!Setting.isValidEmail(value) && !Setting.isValidPhone(value)) {
                           this.setState({validEmailOrPhone: false});
@@ -937,7 +941,7 @@ class LoginPage extends React.Component {
       [generateItemKey("LDAP", "None"), {label: i18next.t("login:LDAP"), key: "ldap"}],
     ]);
 
-    application?.signinMethods.forEach((signinMethod) => {
+    application?.signinMethods?.forEach((signinMethod) => {
       const item = itemsMap.get(generateItemKey(signinMethod.name, signinMethod.rule));
       if (item) {
         const label = signinMethod.name === signinMethod.displayName ? item.label : signinMethod.displayName;

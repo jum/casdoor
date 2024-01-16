@@ -207,6 +207,10 @@ export const OtherProviderInfo = {
       logo: `${StaticBaseUrl}/img/social_google_cloud.png`,
       url: "https://cloud.google.com/storage",
     },
+    "Synology": {
+      logo: `${StaticBaseUrl}/img/social_synology.png`,
+      url: "https://www.synology.com/en-global/dsm/feature/file_sharing",
+    },
   },
   SAML: {
     "Aliyun IDaaS": {
@@ -1024,6 +1028,7 @@ export function getProviderTypeOptions(category) {
         {id: "Azure Blob", name: "Azure Blob"},
         {id: "Qiniu Cloud Kodo", name: "Qiniu Cloud Kodo"},
         {id: "Google Cloud Storage", name: "Google Cloud Storage"},
+        {id: "Synology", name: "Synology"},
       ]
     );
   } else if (category === "SAML") {
@@ -1131,36 +1136,28 @@ export function renderLogo(application) {
   }
 }
 
-export function isPasswordEnabled(application) {
-  if (application) {
-    return application.signinMethods.filter(item => item.name === "Password").length > 0;
+function isSigninMethodEnabled(application, signinMethod) {
+  if (application && application.signinMethods) {
+    return application.signinMethods.filter(item => item.name === signinMethod).length > 0;
   } else {
     return false;
   }
+}
+
+export function isPasswordEnabled(application) {
+  return isSigninMethodEnabled(application, "Password");
 }
 
 export function isCodeSigninEnabled(application) {
-  if (application) {
-    return application.signinMethods.filter(item => item.name === "Verification code").length > 0;
-  } else {
-    return false;
-  }
+  return isSigninMethodEnabled(application, "Verification code");
 }
 
 export function isWebAuthnEnabled(application) {
-  if (application) {
-    return application.signinMethods.filter(item => item.name === "WebAuthn").length > 0;
-  } else {
-    return false;
-  }
+  return isSigninMethodEnabled(application, "WebAuthn");
 }
 
 export function isLdapEnabled(application) {
-  if (application) {
-    return application.signinMethods.filter(item => item.name === "LDAP").length > 0;
-  } else {
-    return false;
-  }
+  return isSigninMethodEnabled(application, "LDAP");
 }
 
 export function getLoginLink(application) {

@@ -27,7 +27,7 @@ import LoginPage from "./auth/LoginPage";
 import i18next from "i18next";
 import UrlTable from "./table/UrlTable";
 import ProviderTable from "./table/ProviderTable";
-import SigninTable from "./table/SigninTable";
+import SigninMethodTable from "./table/SigninMethodTable";
 import SignupTable from "./table/SignupTable";
 import SamlAttributeTable from "./table/SamlAttributeTable";
 import PromptPage from "./auth/PromptPage";
@@ -487,7 +487,7 @@ class ApplicationEditPage extends React.Component {
             {Setting.getLabel(i18next.t("application:Signin methods"), i18next.t("application:Signin methods - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <SigninTable
+            <SigninMethodTable
               title={i18next.t("application:Signin methods")}
               table={this.state.application.signinMethods}
               onUpdateTable={(value) => {
@@ -797,7 +797,7 @@ class ApplicationEditPage extends React.Component {
           </Col>
           <Col span={22} >
             <Row style={{marginTop: "20px"}} >
-              <Radio.Group onChange={e => {this.updateApplicationField("formOffset", e.target.value);}} value={this.state.application.formOffset}>
+              <Radio.Group buttonStyle="solid" onChange={e => {this.updateApplicationField("formOffset", e.target.value);}} value={this.state.application.formOffset}>
                 <Radio.Button value={1}>{i18next.t("application:Left")}</Radio.Button>
                 <Radio.Button value={2}>{i18next.t("application:Center")}</Radio.Button>
                 <Radio.Button value={3}>{i18next.t("application:Right")}</Radio.Button>
@@ -837,7 +837,7 @@ class ApplicationEditPage extends React.Component {
           </Col>
           <Col span={22} style={{marginTop: "5px"}}>
             <Row>
-              <Radio.Group value={this.state.application.themeData?.isEnabled ?? false} onChange={e => {
+              <Radio.Group buttonStyle="solid" value={this.state.application.themeData?.isEnabled ?? false} onChange={e => {
                 const {_, ...theme} = this.state.application.themeData ?? {...Conf.ThemeDefault, isEnabled: false};
                 this.updateApplicationField("themeData", {...theme, isEnabled: e.target.value});
               }} >

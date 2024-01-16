@@ -156,7 +156,7 @@ func (c *ApiController) DeleteToken() {
 // @Success 200 {object} object.TokenWrapper The Response object
 // @Success 400 {object} object.TokenError The Response object
 // @Success 401 {object} object.TokenError The Response object
-// @router api/login/oauth/access_token [post]
+// @router /login/oauth/access_token [post]
 func (c *ApiController) GetOAuthToken() {
 	clientId := c.Input().Get("client_id")
 	clientSecret := c.Input().Get("client_secret")
@@ -273,6 +273,7 @@ func (c *ApiController) RefreshToken() {
 
 // IntrospectToken
 // @Title IntrospectToken
+// @Tag Login API
 // @Description The introspection endpoint is an OAuth 2.0 endpoint that takes a
 // parameter representing an OAuth 2.0 token and returns a JSON document
 // representing the meta information surrounding the
