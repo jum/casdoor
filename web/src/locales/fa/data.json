@@ -1,11 +1,11 @@
 {
   "account": {
-    "Logout": "Logout",
-    "My Account": "My Account",
-    "Sign Up": "Sign Up"
+    "Logout": "خروج",
+    "My Account": "حساب من",
+    "Sign Up": "ثبت نام"
   },
   "adapter": {
-    "Duplicated policy rules": "Duplicated policy rules",
+    "Duplicated policy rules": "قوانین تکراری",
     "Edit Adapter": "Edit Adapter",
     "Failed to sync policies": "Failed to sync policies",
     "New Adapter": "New Adapter",
@@ -17,7 +17,7 @@
     "Use same DB - Tooltip": "Use same DB - Tooltip"
   },
   "application": {
-    "Always": "Always",
+    "Always": "هميشه",
     "Auto signin": "Auto signin",
     "Auto signin - Tooltip": "When a logged-in session exists in Casdoor, it is automatically used for application-side login",
     "Background URL": "Background URL",
@@ -61,7 +61,6 @@
     "Incremental": "Incremental",
     "Input": "Input",
     "Invitation code": "Invitation code",
-    "Invitation code - Tooltip": "Invitation code - Tooltip",
     "Left": "Left",
     "Logged in successfully": "Logged in successfully",
     "Logged out successfully": "Logged out successfully",
@@ -192,7 +191,6 @@
     "Close": "Close",
     "Confirm": "Confirm",
     "Copied to clipboard successfully": "Copied to clipboard successfully",
-    "Copy": "Copy",
     "Created time": "Created time",
     "Custom": "Custom",
     "Dashboard": "Dashboard",
@@ -1092,6 +1090,7 @@
     "Upload ID card front picture": "Upload ID card front picture",
     "Upload ID card with person picture": "Upload ID card with person picture",
     "Upload a photo": "Upload a photo",
+    "User Profile": "User Profile",
     "Values": "Values",
     "Verification code sent": "Verification code sent",
     "WebAuthn credentials": "WebAuthn credentials",

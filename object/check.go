@@ -128,18 +128,6 @@ func CheckUserSignup(application *Application, organization *Organization, authF
 		}
 	}
 
-	if len(application.InvitationCodes) > 0 {
-		if authForm.InvitationCode == "" {
-			if application.IsSignupItemRequired("Invitation code") {
-				return i18n.Translate(lang, "check:Invitation code cannot be blank")
-			}
-		} else {
-			if !util.InSlice(application.InvitationCodes, authForm.InvitationCode) {
-				return i18n.Translate(lang, "check:Invitation code is invalid")
-			}
-		}
-	}
-
 	for _, signupItem := range application.SignupItems {
 		if signupItem.Regex == "" {
 			continue
@@ -162,6 +150,38 @@ func CheckUserSignup(application *Application, organization *Organization, authF
 	}
 
 	return ""
+}
+
+func CheckInvitationCode(application *Application, organization *Organization, authForm *form.AuthForm, lang string) (*Invitation, string) {
+	if authForm.InvitationCode == "" {
+		if application.IsSignupItemRequired("Invitation code") {
+			return nil, i18n.Translate(lang, "check:Invitation code cannot be blank")
+		} else {
+			return nil, ""
+		}
+	}
+
+	invitations, err := GetInvitations(organization.Name)
+	if err != nil {
+		return nil, err.Error()
+	}
+	errMsg := ""
+	for _, invitation := range invitations {
+		if invitation.Application != application.Name && invitation.Application != "All" {
+			continue
+		}
+		if isValid, msg := invitation.IsInvitationCodeValid(application, authForm.InvitationCode, authForm.Username, authForm.Email, authForm.Phone, lang); isValid {
+			return invitation, msg
+		} else if msg != "" && errMsg == "" {
+			errMsg = msg
+		}
+	}
+
+	if errMsg != "" {
+		return nil, errMsg
+	} else {
+		return nil, i18n.Translate(lang, "check:Invitation code is invalid")
+	}
 }
 
 func checkSigninErrorTimes(user *User, lang string) error {
@@ -294,7 +314,7 @@ func checkLdapUserPassword(user *User, password string, lang string) error {
 		}
 		return fmt.Errorf(i18n.Translate(lang, "check:LDAP user name or password incorrect"))
 	}
-	return nil
+	return resetUserSigninErrorTimes(user)
 }
 
 func CheckUserPassword(organization string, username string, password string, lang string, options ...bool) (*User, error) {
