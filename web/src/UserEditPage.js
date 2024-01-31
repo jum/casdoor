@@ -27,6 +27,7 @@ import * as ApplicationBackend from "./backend/ApplicationBackend";
 import PasswordModal from "./common/modal/PasswordModal";
 import ResetModal from "./common/modal/ResetModal";
 import AffiliationSelect from "./common/select/AffiliationSelect";
+import moment from "moment";
 import OAuthWidget from "./common/OAuthWidget";
 import SamlWidget from "./common/SamlWidget";
 import RegionSelect from "./common/select/RegionSelect";
@@ -869,6 +870,7 @@ class UserEditPage extends React.Component {
           <Col span={(Setting.isMobile()) ? 22 : 2} >
             <Switch checked={this.state.user.isDeleted} onChange={checked => {
               this.updateUserField("isDeleted", checked);
+              this.updateUserField("deletedTime", checked ? moment().format() : "");
             }} />
           </Col>
         </Row>
@@ -901,11 +903,9 @@ class UserEditPage extends React.Component {
                       </Space>
                       {item.enabled ? (
                         <Space>
-                          {item.enabled ?
-                            <Tag icon={<CheckCircleOutlined />} color="success">
-                              {i18next.t("general:Enabled")}
-                            </Tag> : null
-                          }
+                          <Tag icon={<CheckCircleOutlined />} color="success">
+                            {i18next.t("general:Enabled")}
+                          </Tag>
                           {item.isPreferred ?
                             <Tag icon={<CheckCircleOutlined />} color="blue" style={{marginRight: 20}} >
                               {i18next.t("mfa:preferred")}
@@ -927,18 +927,23 @@ class UserEditPage extends React.Component {
                               {i18next.t("mfa:Set preferred")}
                             </Button>
                           }
+                          {this.isSelf() ? <Button type={"default"} onClick={() => {
+                            this.props.history.push(`/mfa/setup?mfaType=${item.mfaType}`);
+                          }}>
+                            {i18next.t("general:Edit")}
+                          </Button> : null}
                         </Space>
                       ) :
                         <Space>
-                          {item.mfaType !== TotpMfaType && Setting.isAdminUser(this.props.account) && window.location.href.indexOf("/users") !== -1 ?
+                          {item.mfaType !== TotpMfaType && Setting.isLocalAdminUser(this.props.account) && !this.isSelf() ?
                             <EnableMfaModal user={this.state.user} mfaType={item.mfaType} onSuccess={() => {
                               this.getUser();
                             }} /> : null}
-                          <Button type={"default"} onClick={() => {
+                          {this.isSelf() ? <Button type={"default"} onClick={() => {
                             this.props.history.push(`/mfa/setup?mfaType=${item.mfaType}`);
                           }}>
                             {i18next.t("mfa:Setup")}
-                          </Button>
+                          </Button> : null}
                         </Space>}
                     </List.Item>
                   )}

@@ -49,11 +49,12 @@ type User struct {
 	Name        string `xorm:"varchar(100) notnull pk" json:"name"`
 	CreatedTime string `xorm:"varchar(100) index" json:"createdTime"`
 	UpdatedTime string `xorm:"varchar(100)" json:"updatedTime"`
+	DeletedTime string `xorm:"varchar(100)" json:"deletedTime"`
 
 	Id                string   `xorm:"varchar(100) index" json:"id"`
 	ExternalId        string   `xorm:"varchar(100) index" json:"externalId"`
 	Type              string   `xorm:"varchar(100)" json:"type"`
-	Password          string   `xorm:"varchar(100)" json:"password"`
+	Password          string   `xorm:"varchar(150)" json:"password"`
 	PasswordSalt      string   `xorm:"varchar(100)" json:"passwordSalt"`
 	PasswordType      string   `xorm:"varchar(100)" json:"passwordType"`
 	DisplayName       string   `xorm:"varchar(100)" json:"displayName"`
@@ -64,7 +65,7 @@ type User struct {
 	PermanentAvatar   string   `xorm:"varchar(500)" json:"permanentAvatar"`
 	Email             string   `xorm:"varchar(100) index" json:"email"`
 	EmailVerified     bool     `json:"emailVerified"`
-	Phone             string   `xorm:"varchar(20) index" json:"phone"`
+	Phone             string   `xorm:"varchar(100) index" json:"phone"`
 	CountryCode       string   `xorm:"varchar(6)" json:"countryCode"`
 	Region            string   `xorm:"varchar(100)" json:"region"`
 	Location          string   `xorm:"varchar(100)" json:"location"`
@@ -657,6 +658,10 @@ func UpdateUser(id string, user *User, columns []string, isAdmin bool) (bool, er
 
 	columns = append(columns, "updated_time")
 	user.UpdatedTime = util.GetCurrentTime()
+
+	if len(user.DeletedTime) > 0 {
+		columns = append(columns, "deleted_time")
+	}
 
 	if util.ContainsString(columns, "groups") {
 		_, err := userEnforcer.UpdateGroupsForUser(user.GetId(), user.Groups)
