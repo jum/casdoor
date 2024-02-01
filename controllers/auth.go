@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -912,7 +912,7 @@ func (c *ApiController) HandleSamlLogin() {
 	samlResponse = url.QueryEscape(samlResponse)
 	targetUrl := fmt.Sprintf("%s?relayState=%s&samlResponse=%s",
 		slice[4], relayState, samlResponse)
-	c.Redirect(targetUrl, 303)
+	c.Redirect(targetUrl, http.StatusSeeOther)
 }
 
 // HandleOfficialAccountEvent ...
@@ -921,7 +921,7 @@ func (c *ApiController) HandleSamlLogin() {
 // @router /webhook [POST]
 // @Success 200 {object} object.Userinfo The Response object
 func (c *ApiController) HandleOfficialAccountEvent() {
-	respBytes, err := ioutil.ReadAll(c.Ctx.Request.Body)
+	respBytes, err := io.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
