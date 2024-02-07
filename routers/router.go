@@ -61,7 +61,8 @@ func initAPI() {
 	beego.Router("/api/acs", &controllers.ApiController{}, "POST:HandleSamlLogin")
 	beego.Router("/api/saml/metadata", &controllers.ApiController{}, "GET:GetSamlMeta")
 	beego.Router("/api/saml/redirect/:owner/:application", &controllers.ApiController{}, "*:HandleSamlRedirect")
-	beego.Router("/api/webhook", &controllers.ApiController{}, "POST:HandleOfficialAccountEvent")
+	beego.Router("/api/webhook", &controllers.ApiController{}, "*:HandleOfficialAccountEvent")
+	beego.Router("/api/get-qrcode", &controllers.ApiController{}, "GET:GetQRCode")
 	beego.Router("/api/get-webhook-event", &controllers.ApiController{}, "GET:GetWebhookEventType")
 	beego.Router("/api/get-captcha-status", &controllers.ApiController{}, "GET:GetCaptchaStatus")
 	beego.Router("/api/callback", &controllers.ApiController{}, "POST:Callback")
@@ -94,6 +95,7 @@ func initAPI() {
 
 	beego.Router("/api/get-invitations", &controllers.ApiController{}, "GET:GetInvitations")
 	beego.Router("/api/get-invitation", &controllers.ApiController{}, "GET:GetInvitation")
+	beego.Router("/api/get-invitation-info", &controllers.ApiController{}, "GET:GetInvitationCodeInfo")
 	beego.Router("/api/update-invitation", &controllers.ApiController{}, "POST:UpdateInvitation")
 	beego.Router("/api/add-invitation", &controllers.ApiController{}, "POST:AddInvitation")
 	beego.Router("/api/delete-invitation", &controllers.ApiController{}, "POST:DeleteInvitation")

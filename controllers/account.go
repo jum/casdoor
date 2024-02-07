@@ -93,6 +93,10 @@ func (c *ApiController) Signup() {
 		c.ResponseError(err.Error())
 		return
 	}
+	if application == nil {
+		c.ResponseError(fmt.Sprintf(c.T("auth:The application: %s does not exist"), authForm.Application))
+		return
+	}
 
 	if !application.EnableSignUp {
 		c.ResponseError(c.T("account:The application does not allow to sign up new account"))
@@ -102,6 +106,11 @@ func (c *ApiController) Signup() {
 	organization, err := object.GetOrganization(util.GetId("admin", authForm.Organization))
 	if err != nil {
 		c.ResponseError(c.T(err.Error()))
+		return
+	}
+
+	if organization == nil {
+		c.ResponseError(fmt.Sprintf(c.T("auth:The organization: %s does not exist"), authForm.Organization))
 		return
 	}
 
@@ -227,7 +236,7 @@ func (c *ApiController) Signup() {
 
 	if invitation != nil {
 		invitation.UsedCount += 1
-		_, err := object.UpdateInvitation(invitation.GetId(), invitation)
+		_, err := object.UpdateInvitation(invitation.GetId(), invitation, c.GetAcceptLanguage())
 		if err != nil {
 			c.ResponseError(err.Error())
 			return

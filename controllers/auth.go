@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/casdoor/casdoor/captcha"
 	"github.com/casdoor/casdoor/conf"
@@ -35,11 +34,6 @@ import (
 	"github.com/casdoor/casdoor/util"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
-)
-
-var (
-	wechatScanType string
-	lock           sync.RWMutex
 )
 
 func codeToResponse(code *object.Code) *Response {
@@ -919,49 +913,112 @@ func (c *ApiController) HandleSamlLogin() {
 // @Tag System API
 // @Title HandleOfficialAccountEvent
 // @router /webhook [POST]
-// @Success 200 {object} object.Userinfo The Response object
+// @Success 200 {object} controllers.Response The Response object
 func (c *ApiController) HandleOfficialAccountEvent() {
+	if c.Ctx.Request.Method == "GET" {
+		s := c.Ctx.Request.FormValue("echostr")
+		echostr, _ := strconv.Atoi(s)
+		c.SetData(echostr)
+		c.ServeJSON()
+		return
+	}
 	respBytes, err := io.ReadAll(c.Ctx.Request.Body)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
-
+	signature := c.Input().Get("signature")
+	timestamp := c.Input().Get("timestamp")
+	nonce := c.Input().Get("nonce")
 	var data struct {
-		MsgType  string `xml:"MsgType"`
-		Event    string `xml:"Event"`
-		EventKey string `xml:"EventKey"`
+		MsgType      string `xml:"MsgType"`
+		Event        string `xml:"Event"`
+		EventKey     string `xml:"EventKey"`
+		FromUserName string `xml:"FromUserName"`
+		Ticket       string `xml:"Ticket"`
 	}
 	err = xml.Unmarshal(respBytes, &data)
 	if err != nil {
 		c.ResponseError(err.Error())
 		return
 	}
-
-	lock.Lock()
-	defer lock.Unlock()
-	if data.EventKey != "" {
-		wechatScanType = data.Event
+	if strings.ToUpper(data.Event) != "SCAN" && strings.ToUpper(data.Event) != "SUBSCRIBE" {
 		c.Ctx.WriteString("")
+		return
 	}
+	if data.Ticket == "" {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	providerId := data.EventKey
+	provider, err := object.GetProvider(providerId)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+	if data.Ticket == "" {
+		c.ResponseError("empty ticket")
+		return
+	}
+	if !idp.VerifyWechatSignature(provider.Content, nonce, timestamp, signature) {
+		c.ResponseError("invalid signature")
+		return
+	}
+
+	idp.Lock.Lock()
+	if idp.WechatCacheMap == nil {
+		idp.WechatCacheMap = make(map[string]idp.WechatCacheMapValue)
+	}
+	idp.WechatCacheMap[data.Ticket] = idp.WechatCacheMapValue{
+		IsScanned:     true,
+		WechatUnionId: data.FromUserName,
+	}
+	idp.Lock.Unlock()
+
+	c.Ctx.WriteString("")
 }
 
 // GetWebhookEventType ...
 // @Tag System API
 // @Title GetWebhookEventType
 // @router /get-webhook-event [GET]
-// @Success 200 {object} object.Userinfo The Response object
+// @Param   ticket     query    string  true        "The eventId of QRCode"
+// @Success 200 {object} controllers.Response The Response object
 func (c *ApiController) GetWebhookEventType() {
-	lock.Lock()
-	defer lock.Unlock()
-	resp := &Response{
-		Status: "ok",
-		Msg:    "",
-		Data:   wechatScanType,
+	ticket := c.Input().Get("ticket")
+
+	idp.Lock.RLock()
+	_, ok := idp.WechatCacheMap[ticket]
+	idp.Lock.RUnlock()
+	if !ok {
+		c.ResponseError("ticket not found")
+		return
 	}
-	c.Data["json"] = resp
-	wechatScanType = ""
-	c.ServeJSON()
+
+	c.ResponseOk("SCAN", ticket)
+}
+
+// GetQRCode
+// @Tag System API
+// @Title GetWechatQRCode
+// @router /get-qrcode [GET]
+// @Param   id     query    string  true        "The id ( owner/name ) of provider"
+// @Success 200 {object} controllers.Response The Response object
+func (c *ApiController) GetQRCode() {
+	providerId := c.Input().Get("id")
+	provider, err := object.GetProvider(providerId)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+	code, ticket, err := idp.GetWechatOfficialAccountQRCode(provider.ClientId2, provider.ClientSecret2, providerId)
+	if err != nil {
+		c.ResponseError(err.Error())
+		return
+	}
+
+	c.ResponseOk(code, ticket)
 }
 
 // GetCaptchaStatus
