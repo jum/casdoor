@@ -105,6 +105,7 @@ type Application struct {
 	SignupHtml           string     `xorm:"mediumtext" json:"signupHtml"`
 	SigninHtml           string     `xorm:"mediumtext" json:"signinHtml"`
 	ThemeData            *ThemeData `xorm:"json" json:"themeData"`
+	FooterHtml           string     `xorm:"mediumtext" json:"footerHtml"`
 	FormCss              string     `xorm:"text" json:"formCss"`
 	FormCssMobile        string     `xorm:"text" json:"formCssMobile"`
 	FormOffset           int        `json:"formOffset"`
@@ -528,11 +529,12 @@ func GetMaskedApplication(application *Application, userId string) *Application 
 		application.OrganizationObj.PasswordSalt = "***"
 		application.OrganizationObj.InitScore = -1
 		application.OrganizationObj.EnableSoftDeletion = false
-		application.OrganizationObj.IsProfilePublic = false
 
 		if !isOrgUser {
 			application.OrganizationObj.MfaItems = nil
-			application.OrganizationObj.AccountItems = nil
+			if !application.OrganizationObj.IsProfilePublic {
+				application.OrganizationObj.AccountItems = nil
+			}
 		}
 	}
 
