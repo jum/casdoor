@@ -140,6 +140,12 @@ func GetRecords() ([]*casvisorsdk.Record, error) {
 
 func GetPaginationRecords(offset, limit int, field, value, sortField, sortOrder string, filterRecord *casvisorsdk.Record) ([]*casvisorsdk.Record, error) {
 	records := []*casvisorsdk.Record{}
+
+	if sortField == "" || sortOrder == "" {
+		sortField = "id"
+		sortOrder = "descend"
+	}
+
 	session := GetSession("", offset, limit, field, value, sortField, sortOrder)
 	err := session.Find(&records, filterRecord)
 	if err != nil {
@@ -157,6 +163,25 @@ func GetRecordsByField(record *casvisorsdk.Record) ([]*casvisorsdk.Record, error
 	}
 
 	return records, nil
+}
+
+func CopyRecord(record *casvisorsdk.Record) *casvisorsdk.Record {
+	res := &casvisorsdk.Record{
+		Owner:        record.Owner,
+		Name:         record.Name,
+		CreatedTime:  record.CreatedTime,
+		Organization: record.Organization,
+		ClientIp:     record.ClientIp,
+		User:         record.User,
+		Method:       record.Method,
+		RequestUri:   record.RequestUri,
+		Action:       record.Action,
+		Language:     record.Language,
+		Object:       record.Object,
+		Response:     record.Response,
+		IsTriggered:  record.IsTriggered,
+	}
+	return res
 }
 
 func getFilteredWebhooks(webhooks []*Webhook, organization string, action string) []*Webhook {
