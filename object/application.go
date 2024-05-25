@@ -35,6 +35,7 @@ type SignupItem struct {
 	Visible     bool   `json:"visible"`
 	Required    bool   `json:"required"`
 	Prompted    bool   `json:"prompted"`
+	CustomCss   string `json:"customCss"`
 	Label       string `json:"label"`
 	Placeholder string `json:"placeholder"`
 	Regex       string `json:"regex"`
@@ -45,6 +46,7 @@ type SigninItem struct {
 	Name        string `json:"name"`
 	Visible     bool   `json:"visible"`
 	Label       string `json:"label"`
+	CustomCss   string `json:"customCss"`
 	Placeholder string `json:"placeholder"`
 	Rule        string `json:"rule"`
 	IsCustom    bool   `json:"isCustom"`
@@ -208,7 +210,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem := &SigninItem{
 			Name:        "Back button",
 			Visible:     true,
-			Label:       "\n<style>\n  .back-button {\n      top: 65px;\n      left: 15px;\n      position: absolute;\n  }\n</style>\n",
+			CustomCss:   ".back-button {\n      top: 65px;\n      left: 15px;\n      position: absolute;\n}\n.back-inner-button{}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -216,7 +218,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Languages",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-languages {\n      top: 55px;\n      right: 5px;\n      position: absolute;\n  }\n</style>\n",
+			CustomCss:   ".login-languages {\n    top: 55px;\n    right: 5px;\n    position: absolute;\n}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -224,7 +226,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Logo",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-logo-box {\n  }\n</style>\n",
+			CustomCss:   ".login-logo-box {}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -232,7 +234,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Signin methods",
 			Visible:     true,
-			Label:       "\n<style>\n  .signin-methods {\n  }\n</style>\n",
+			CustomCss:   ".signin-methods {}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -240,7 +242,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Username",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-username {\n  }\n</style>\n",
+			CustomCss:   ".login-username {}\n.login-username-input{}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -248,7 +250,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Password",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-password {\n  }\n</style>\n",
+			CustomCss:   ".login-password {}\n.login-password-input{}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -256,7 +258,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Agreement",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-agreement {\n  }\n</style>\n",
+			CustomCss:   ".login-agreement {}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -264,7 +266,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Forgot password?",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-forget-password {\n    display: inline-flex;\n    justify-content: space-between;\n    width: 320px;\n    margin-bottom: 25px;\n  }\n</style>\n",
+			CustomCss:   ".login-forget-password {\n    display: inline-flex;\n    justify-content: space-between;\n    width: 320px;\n    margin-bottom: 25px;\n}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -272,7 +274,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Login button",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-button-box {\n    margin-bottom: 5px;\n  }\n  .login-button {\n    width: 100%;\n  }\n</style>\n",
+			CustomCss:   ".login-button-box {\n    margin-bottom: 5px;\n}\n.login-button {\n    width: 100%;\n}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -280,7 +282,7 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Signup link",
 			Visible:     true,
-			Label:       "\n<style>\n  .login-signup-link {\n    margin-bottom: 24px;\n    display: flex;\n    justify-content: end;\n}\n</style>\n",
+			CustomCss:   ".login-signup-link {\n    margin-bottom: 24px;\n    display: flex;\n    justify-content: end;\n}",
 			Placeholder: "",
 			Rule:        "None",
 		}
@@ -288,11 +290,17 @@ func extendApplicationWithSigninItems(application *Application) (err error) {
 		signinItem = &SigninItem{
 			Name:        "Providers",
 			Visible:     true,
-			Label:       "\n<style>\n  .provider-img {\n      width: 30px;\n      margin: 5px;\n  }\n  .provider-big-img {\n      margin-bottom: 10px;\n  }\n</style>\n",
+			CustomCss:   ".provider-img {\n      width: 30px;\n      margin: 5px;\n}\n.provider-big-img {\n      margin-bottom: 10px;\n}",
 			Placeholder: "",
 			Rule:        "None",
 		}
 		application.SigninItems = append(application.SigninItems, signinItem)
+	}
+	for idx, item := range application.SigninItems {
+		if item.Label != "" && item.CustomCss == "" {
+			application.SigninItems[idx].CustomCss = item.Label
+			application.SigninItems[idx].Label = ""
+		}
 	}
 	return
 }
@@ -404,8 +412,8 @@ func GetApplicationByUser(user *User) (*Application, error) {
 }
 
 func GetApplicationByUserId(userId string) (application *Application, err error) {
-	owner, name := util.GetOwnerAndNameFromId(userId)
-	if owner == "app" {
+	_, name := util.GetOwnerAndNameFromId(userId)
+	if IsAppUser(userId) {
 		application, err = getApplication("admin", name)
 		return
 	}
@@ -669,17 +677,21 @@ func AddApplication(application *Application) (bool, error) {
 	return affected != 0, nil
 }
 
-func DeleteApplication(application *Application) (bool, error) {
-	if application.Name == "app-built-in" {
-		return false, nil
-	}
-
+func deleteApplication(application *Application) (bool, error) {
 	affected, err := ormer.Engine.ID(core.PK{application.Owner, application.Name}).Delete(&Application{})
 	if err != nil {
 		return false, err
 	}
 
 	return affected != 0, nil
+}
+
+func DeleteApplication(application *Application) (bool, error) {
+	if application.Name == "app-built-in" {
+		return false, nil
+	}
+
+	return deleteApplication(application)
 }
 
 func (application *Application) GetId() string {

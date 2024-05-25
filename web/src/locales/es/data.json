@@ -80,6 +80,7 @@
     "Only signup": "Only signup",
     "Org choice mode": "Org choice mode",
     "Org choice mode - Tooltip": "Org choice mode - Tooltip",
+    "Please enable \\\"Signin session\\\" first before enabling \\\"Auto signin\\\"": "Please enable \\\"Signin session\\\" first before enabling \\\"Auto signin\\\"",
     "Please input your application!": "¡Por favor, ingrese su solicitud!",
     "Please input your organization!": "¡Por favor, ingrese su organización!",
     "Please select a HTML file": "Por favor, seleccione un archivo HTML",
@@ -229,6 +230,7 @@
     "Email": "Correo electrónico",
     "Email - Tooltip": "Dirección de correo electrónico válida",
     "Email only": "Email only",
+    "Email or Phone": "Email or Phone",
     "Enable": "Enable",
     "Enable dark logo": "Enable dark logo",
     "Enable dark logo - Tooltip": "Enable dark logo",
@@ -311,6 +313,7 @@
     "Phone": "Teléfono",
     "Phone - Tooltip": "Número de teléfono",
     "Phone only": "Phone only",
+    "Phone or Email": "Phone or Email",
     "Plan": "Plan",
     "Plan - Tooltip": "Plan - Tooltip",
     "Plans": "Planes",
@@ -391,6 +394,7 @@
     "User type": "Tipo de usuario",
     "User type - Tooltip": "Etiquetas a las que el usuario pertenece, con una configuración predeterminada en \"usuario-normal\"",
     "Users": "Usuarios",
+    "Users - Tooltip": "Users - Tooltip",
     "Users under all organizations": "Usuarios bajo todas las organizaciones",
     "Verifications": "Verifications",
     "Webhooks": "Webhooks",
@@ -473,7 +477,6 @@
     "LDAP username, Email or phone": "LDAP username, Email or phone",
     "Loading": "Cargando",
     "Logging out...": "Cerrando sesión...",
-    "Login button": "Login button",
     "MetaMask plugin not detected": "MetaMask plugin not detected",
     "Model loading failure": "Model loading failure",
     "No account?": "¿No tienes cuenta?",
@@ -498,6 +501,7 @@
     "Sign in with Face ID": "Sign in with Face ID",
     "Sign in with WebAuthn": "Iniciar sesión con WebAuthn",
     "Sign in with {type}": "Inicia sesión con {tipo}",
+    "Signin button": "Signin button",
     "Signing in...": "Iniciando sesión...",
     "Successfully logged in with WebAuthn credentials": "Inició sesión correctamente con las credenciales de WebAuthn",
     "The camera is currently in use by another webpage": "The camera is currently in use by another webpage",
@@ -774,6 +778,8 @@
     "From address - Tooltip": "From address - Tooltip",
     "From name": "From name",
     "From name - Tooltip": "From name - Tooltip",
+    "Get phone number": "Get phone number",
+    "Get phone number - Tooltip": "If sync phone number is enabled, you should enable google people api first and add scope https://www.googleapis.com/auth/user.phonenumbers.read",
     "Host": "Anfitrión",
     "Host - Tooltip": "Nombre del anfitrión",
     "IdP": "IdP = Proveedor de Identidad",
@@ -893,7 +899,8 @@
   "record": {
     "Is triggered": "Is triggered",
     "Object": "Object",
-    "Response": "Response"
+    "Response": "Response",
+    "Status code": "Status code"
   },
   "resource": {
     "Copy Link": "Copiar enlace",
@@ -941,6 +948,7 @@
     "Please select your country code!": "¡Por favor seleccione su código de país!",
     "Please select your country/region!": "¡Por favor seleccione su país/región!",
     "Regex": "Regex",
+    "Signup button": "Signup button",
     "Terms of Use": "Términos de uso",
     "Terms of Use - Tooltip": "Términos de uso que los usuarios necesitan leer y aceptar durante el registro",
     "Text 1": "Text 1",
@@ -948,6 +956,7 @@
     "Text 3": "Text 3",
     "Text 4": "Text 4",
     "Text 5": "Text 5",
+    "The input Email doesn't match the signup item regex!": "The input Email doesn't match the signup item regex!",
     "The input is not invoice Tax ID!": "¡La entrada no es el ID fiscal de la factura!",
     "The input is not invoice title!": "¡El entrada no es el título de la factura!",
     "The input is not valid Email!": "¡La entrada no es un correo electrónico válido!",
@@ -1068,6 +1077,7 @@
     "3rd-party logins - Tooltip": "Accesos sociales ligados por el usuario",
     "Address": "Dirección",
     "Address - Tooltip": "Dirección residencial",
+    "Address line": "Address line",
     "Affiliation": "Afiliación",
     "Affiliation - Tooltip": "Empleador, como el nombre de una empresa u organización",
     "Bio": "Bio - Biografía",
@@ -1162,9 +1172,11 @@
     "Values": "Valores",
     "Verification code sent": "Código de verificación enviado",
     "WebAuthn credentials": "Credenciales de WebAuthn",
+    "You have changed the username, please save your change first before modifying the password": "You have changed the username, please save your change first before modifying the password",
     "input password": "Ingresar contraseña"
   },
   "verification": {
+    "Is used": "Is used",
     "Receiver": "Receiver"
   },
   "webhook": {

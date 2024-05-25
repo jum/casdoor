@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import React from "react";
-import {Button, Card, Col, Form, Input, InputNumber, List, Result, Row, Select, Space, Spin, Switch, Tag} from "antd";
+import {Button, Card, Col, Form, Input, InputNumber, List, Result, Row, Select, Space, Spin, Switch, Tag, Tooltip} from "antd";
 import {withRouter} from "react-router-dom";
 import {TotpMfaType} from "./auth/MfaSetupPage";
 import * as GroupBackend from "./backend/GroupBackend";
@@ -202,7 +202,7 @@ class UserEditPage extends React.Component {
     return value;
   }
 
-  updateUserField(key, value) {
+  updateUserField(key, value, idx) {
     if (this.props.account === null) {
       return;
     }
@@ -210,7 +210,15 @@ class UserEditPage extends React.Component {
     value = this.parseUserField(key, value);
 
     const user = this.state.user;
-    user[key] = value;
+    if (key === "address") {
+      if (!user[key]) {
+        user[key] = ["", ""];
+      }
+      user[key][idx] = value;
+    } else {
+      user[key] = value;
+    }
+
     this.setState({
       user: user,
     });
@@ -407,7 +415,17 @@ class UserEditPage extends React.Component {
             {Setting.getLabel(i18next.t("general:Password"), i18next.t("general:Password - Tooltip"))} :
           </Col>
           <Col span={22} >
-            <PasswordModal user={this.state.user} userName={this.state.userName} organization={this.getUserOrganization()} account={this.props.account} disabled={disabled} />
+            {
+              (this.state.user.name === this.state.userName) ? (
+                <PasswordModal user={this.state.user} userName={this.state.userName} organization={this.getUserOrganization()} account={this.props.account} disabled={disabled} />
+              ) : (
+                <Tooltip placement={"topLeft"} title={i18next.t("user:You have changed the username, please save your change first before modifying the password")}>
+                  <span>
+                    <PasswordModal user={this.state.user} userName={this.state.userName} organization={this.getUserOrganization()} account={this.props.account} disabled={true} />
+                  </span>
+                </Tooltip>
+              )
+            }
           </Col>
         </Row>
       );
@@ -491,16 +509,33 @@ class UserEditPage extends React.Component {
       );
     } else if (accountItem.name === "Address") {
       return (
-        <Row style={{marginTop: "20px"}} >
-          <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
-            {Setting.getLabel(i18next.t("user:Address"), i18next.t("user:Address - Tooltip"))} :
-          </Col>
-          <Col span={22} >
-            <Input value={this.state.user.address} onChange={e => {
-              this.updateUserField("address", e.target.value);
-            }} />
-          </Col>
-        </Row>
+        <React.Fragment>
+          <Row style={{marginTop: "20px"}} >
+            <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+              {Setting.getLabel(i18next.t("user:Address"), i18next.t("user:Address - Tooltip"))} :
+            </Col>
+            <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+              <span>{i18next.t("user:Address line") + " 1"}</span> :
+            </Col>
+            <Col span={20} >
+              <Input value={!this.state.user.address ? "" : this.state.user.address[0]} onChange={e => {
+                this.updateUserField("address", e.target.value, 0);
+              }} />
+            </Col>
+          </Row>
+          <Row style={{marginTop: "20px"}} >
+            <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+            </Col>
+            <Col style={{marginTop: "5px"}} span={(Setting.isMobile()) ? 22 : 2}>
+              <span>{i18next.t("user:Address line") + " 2"}</span> :
+            </Col>
+            <Col span={20} >
+              <Input value={!this.state.user.address ? "" : this.state.user.address[1]} onChange={e => {
+                this.updateUserField("address", e.target.value, 1);
+              }} />
+            </Col>
+          </Row>
+        </React.Fragment>
       );
     } else if (accountItem.name === "Affiliation") {
       return (
