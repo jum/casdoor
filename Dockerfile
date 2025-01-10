@@ -10,28 +10,24 @@ COPY ./web .
 RUN NODE_OPTIONS="--max-old-space-size=4096" yarn run build
 
 FROM --platform=$BUILDPLATFORM golang:1.23.12 AS BACK
+ENV CGO_ENABLED=0
+ARG TARGETOS TARGETARCH GOPROXY
 WORKDIR /go/src/casdoor
 
 # Copy only go.mod and go.sum first for dependency caching
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source files
+COPY go.mod go.sum .
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOPROXY=${GOPROXY} go mod download
 COPY . .
 
-RUN ./build.sh
-RUN go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go > version_info.txt
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s" -o server .
+#RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go > version_info.txt
 
 FROM alpine:latest AS STANDARD
 LABEL MAINTAINER="https://casdoor.org/"
 ARG USER=casdoor
-ARG TARGETOS
-ARG TARGETARCH
-ENV BUILDX_ARCH="${TARGETOS:-linux}_${TARGETARCH:-amd64}"
 
 RUN sed -i 's/https/http/' /etc/apk/repositories
 RUN apk add --update sudo
-RUN apk add tzdata
 RUN apk add curl
 RUN apk add ca-certificates && update-ca-certificates
 
@@ -43,10 +39,10 @@ RUN adduser -D $USER -u 1000 \
 
 USER 1000
 WORKDIR /
-COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/server_${BUILDX_ARCH} ./server
+COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/server ./server
 COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/swagger ./swagger
 COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/conf/app.conf ./conf/app.conf
-COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/version_info.txt ./go/src/casdoor/version_info.txt
+#COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/version_info.txt ./go/src/casdoor/version_info.txt
 COPY --from=FRONT --chown=$USER:$USER /web/build ./web/build
 
 ENTRYPOINT ["/server"]
@@ -62,15 +58,12 @@ RUN apt update \
 
 FROM db AS ALLINONE
 LABEL MAINTAINER="https://casdoor.org/"
-ARG TARGETOS
-ARG TARGETARCH
-ENV BUILDX_ARCH="${TARGETOS:-linux}_${TARGETARCH:-amd64}"
 
 RUN apt update
 RUN apt install -y ca-certificates && update-ca-certificates
 
 WORKDIR /
-COPY --from=BACK /go/src/casdoor/server_${BUILDX_ARCH} ./server
+COPY --from=BACK /go/src/casdoor/server ./server
 COPY --from=BACK /go/src/casdoor/swagger ./swagger
 COPY --from=BACK /go/src/casdoor/docker-entrypoint.sh /docker-entrypoint.sh
 COPY --from=BACK /go/src/casdoor/conf/app.conf ./conf/app.conf
