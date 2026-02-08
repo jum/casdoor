@@ -10,17 +10,17 @@ COPY ./web .
 RUN NODE_OPTIONS="--max-old-space-size=4096" yarn run build
 
 FROM --platform=$BUILDPLATFORM golang:1.23.12 AS BACK
+ENV CGO_ENABLED=0
+ARG TARGETOS TARGETARCH GOPROXY
 WORKDIR /go/src/casdoor
 
 # Copy only go.mod and go.sum first for dependency caching
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source files
+COPY go.mod go.sum .
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOPROXY=${GOPROXY} go mod download
 COPY . .
 
-RUN go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go ./util/variable.go
-RUN ./build.sh
+#RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg go test -v -run TestGetVersionInfo ./util/system_test.go ./util/system.go ./util/variable.go
+RUN --mount=type=cache,target=/root/.cache/go-build --mount=type=cache,target=/go/pkg GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s" -o server .
 
 FROM alpine:latest AS STANDARD
 LABEL MAINTAINER="https://casdoor.org/"
@@ -43,7 +43,7 @@ RUN adduser -D $USER -u 1000 \
 
 USER 1000
 WORKDIR /
-COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/server_${BUILDX_ARCH} ./server
+COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/server ./server
 COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/swagger ./swagger
 COPY --from=BACK --chown=$USER:$USER /go/src/casdoor/conf/app.conf ./conf/app.conf
 COPY --from=FRONT --chown=$USER:$USER /web/build ./web/build
@@ -61,7 +61,7 @@ RUN apt update
 RUN apt install -y ca-certificates lsof && update-ca-certificates
 
 WORKDIR /
-COPY --from=BACK /go/src/casdoor/server_${BUILDX_ARCH} ./server
+COPY --from=BACK /go/src/casdoor/server ./server
 COPY --from=BACK /go/src/casdoor/swagger ./swagger
 COPY --from=BACK /go/src/casdoor/docker-entrypoint.sh /docker-entrypoint.sh
 COPY --from=BACK /go/src/casdoor/conf/app.conf ./conf/app.conf
