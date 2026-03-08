@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - local_deploy
+      - pr-5235
   workflow_dispatch:
 jobs:
   Build-Docker:
