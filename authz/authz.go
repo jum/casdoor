@@ -188,18 +188,18 @@ func InitApi() {
 	}
 }
 
-func IsAllowed(subOwner string, subName string, method string, urlPath string, objOwner string, objName string, extraInfo map[string]interface{}) bool {
+func IsAllowed(subOwner string, subName string, method string, urlPath string, objOwner string, objName string, extraInfo map[string]interface{}) (bool, error) {
 	if urlPath == "/api/mcp" {
 		if detailPath, ok := extraInfo["detailPathUrl"].(string); ok {
 			if detailPath == "initialize" || detailPath == "notifications/initialized" || detailPath == "ping" || detailPath == "tools/list" {
-				return true
+				return true, nil
 			}
 		}
 	}
 
 	if conf.IsDemoMode() {
 		if !isAllowedInDemoMode(subOwner, subName, method, urlPath, objOwner, objName) {
-			return false
+			return false, nil
 		}
 	}
 
@@ -208,43 +208,43 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		// Built-in org apps retain global-admin access; others are scoped to their own org.
 		appOrg, _ := object.ParseAppUserId("app/" + subName)
 		if appOrg == "built-in" || objOwner == "" || appOrg == objOwner {
-			return true
+			return true, nil
 		}
-		return false
+		return false, nil
 	}
 
 	user, err := object.GetUser(util.GetId(subOwner, subName))
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	if user != nil {
 		if user.IsDeleted {
-			return false
+			return false, nil
 		}
 
 		if user.IsGlobalAdmin() {
-			return true
+			return true, nil
 		}
 
 		if user.IsAdmin && subOwner == objOwner {
-			return true
+			return true, nil
 		}
 	}
 
 	res, err := Enforcer.Enforce(subOwner, subName, method, urlPath, objOwner, objName)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	if !res {
 		res, err = object.CheckApiPermission(util.GetId(subOwner, subName), objOwner, urlPath, method)
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 	}
 
-	return res
+	return res, nil
 }
 
 func isAllowedInDemoMode(subOwner string, subName string, method string, urlPath string, objOwner string, objName string) bool {
