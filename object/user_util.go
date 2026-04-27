@@ -976,6 +976,28 @@ func IsAppUser(userId string) bool {
 	return false
 }
 
+// ParseAppUserId splits an app userId into its organization and application name.
+// New format: "app/{org}/{appName}" → (org, appName).
+// Legacy format: "app/{appName}" → ("built-in", appName) for backward compatibility.
+func ParseAppUserId(userId string) (org, appName string) {
+	tail := userId[len("app/"):]
+	parts := strings.SplitN(tail, "/", 2)
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+	return "built-in", tail
+}
+
+// IsBuiltInAppUser reports whether the app credential belongs to the built-in
+// organization (i.e. should have global-admin access).
+func IsBuiltInAppUser(userId string) bool {
+	if !IsAppUser(userId) {
+		return false
+	}
+	org, _ := ParseAppUserId(userId)
+	return org == "built-in"
+}
+
 func setReflectAttr[T any](fieldValue *reflect.Value, fieldString string) error {
 	unmarshalValue := new(T)
 	err := json.Unmarshal([]byte(fieldString), unmarshalValue)

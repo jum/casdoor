@@ -112,12 +112,13 @@ func getSubject(ctx *context.Context) (string, string) {
 		return "anonymous", "anonymous"
 	}
 
-	// username == "built-in/admin"
-	owner, name, err := util.GetOwnerAndNameFromIdWithError(username)
-	if err != nil {
-		panic(err)
+	// username is "built-in/admin" (2 parts) or "app/{org}/{name}" (3 parts for app users).
+	// Use SplitN(..., 2) so the org/name tail stays intact as a single token.
+	tokens := strings.SplitN(username, "/", 2)
+	if len(tokens) != 2 {
+		panic(fmt.Errorf("getSubject() error, wrong token count for username: %s", username))
 	}
-	return owner, name
+	return tokens[0], tokens[1]
 }
 
 func getObject(ctx *context.Context) (string, string, error) {

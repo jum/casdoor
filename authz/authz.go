@@ -175,7 +175,13 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 	}
 
 	if subOwner == "app" {
-		return true
+		// subName is "{appOrg}/{appName}" (new) or "{appName}" (legacy, treated as built-in).
+		// Built-in org apps retain global-admin access; others are scoped to their own org.
+		appOrg, _ := object.ParseAppUserId("app/" + subName)
+		if appOrg == "built-in" || objOwner == "" || appOrg == objOwner {
+			return true
+		}
+		return false
 	}
 
 	if user != nil {
