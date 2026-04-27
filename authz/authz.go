@@ -210,25 +210,24 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		if appOrg == "built-in" || objOwner == "" || appOrg == objOwner {
 			return true, nil
 		}
-		return false, nil
-	}
-
-	user, err := object.GetUser(util.GetId(subOwner, subName))
-	if err != nil {
-		return false, err
-	}
-
-	if user != nil {
-		if user.IsDeleted {
-			return false, nil
+	} else {
+		user, err := object.GetUser(util.GetId(subOwner, subName))
+		if err != nil {
+			return false, err
 		}
 
-		if user.IsGlobalAdmin() {
-			return true, nil
-		}
+		if user != nil {
+			if user.IsDeleted {
+				return false, nil
+			}
 
-		if user.IsAdmin && subOwner == objOwner {
-			return true, nil
+			if user.IsGlobalAdmin() {
+				return true, nil
+			}
+
+			if user.IsAdmin && subOwner == objOwner {
+				return true, nil
+			}
 		}
 	}
 
