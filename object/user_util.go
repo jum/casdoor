@@ -977,15 +977,16 @@ func IsAppUser(userId string) bool {
 }
 
 // ParseAppUserId splits an app userId into its organization and application name.
-// New format: "app/{org}/{appName}" → (org, appName).
-// Legacy format: "app/{appName}" → ("built-in", appName) for backward compatibility.
+// New format "app/{org}/{appName}" → (org, appName).
+// Legacy format "app/{appName}" → ("built-in", appName) for backward compatibility.
 func ParseAppUserId(userId string) (org, appName string) {
-	tail := userId[len("app/"):]
-	parts := strings.SplitN(tail, "/", 2)
-	if len(parts) == 2 {
-		return parts[0], parts[1]
+	ownerType, owner, name, err := util.ParseUserId(userId)
+	if err != nil || ownerType == "" {
+		// Legacy 2-part "app/{appName}": owner=="app", name==appName.
+		return "built-in", name
 	}
-	return "built-in", tail
+	// 3-part "app/{org}/{appName}": ownerType=="app", owner==org, name==appName.
+	return owner, name
 }
 
 // IsBuiltInAppUser reports whether the app credential belongs to the built-in

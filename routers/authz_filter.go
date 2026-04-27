@@ -112,13 +112,16 @@ func getSubject(ctx *context.Context) (string, string) {
 		return "anonymous", "anonymous"
 	}
 
-	// username is "built-in/admin" (2 parts) or "app/{org}/{name}" (3 parts for app users).
-	// Use SplitN(..., 2) so the org/name tail stays intact as a single token.
-	tokens := strings.SplitN(username, "/", 2)
-	if len(tokens) != 2 {
-		panic(fmt.Errorf("getSubject() error, wrong token count for username: %s", username))
+	ownerType, owner, name, err := util.ParseUserId(username)
+	if err != nil {
+		panic(err)
 	}
-	return tokens[0], tokens[1]
+	if ownerType != "" {
+		// Typed identity (e.g. "app/casbin/app-casibase"): keep ownerType as
+		// subOwner so IsAllowed can detect the identity type.
+		return ownerType, owner + "/" + name
+	}
+	return owner, name
 }
 
 func getObject(ctx *context.Context) (string, string, error) {
