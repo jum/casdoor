@@ -203,11 +203,6 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 		}
 	}
 
-	user, err := object.GetUser(util.GetId(subOwner, subName))
-	if err != nil {
-		panic(err)
-	}
-
 	if subOwner == "app" {
 		// subName is "{appOrg}/{appName}" (new) or "{appName}" (legacy, treated as built-in).
 		// Built-in org apps retain global-admin access; others are scoped to their own org.
@@ -216,6 +211,11 @@ func IsAllowed(subOwner string, subName string, method string, urlPath string, o
 			return true
 		}
 		return false
+	}
+
+	user, err := object.GetUser(util.GetId(subOwner, subName))
+	if err != nil {
+		panic(err)
 	}
 
 	if user != nil {
